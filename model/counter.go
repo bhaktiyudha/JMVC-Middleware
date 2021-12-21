@@ -57,6 +57,7 @@ func (cm CounterModel) InsertCounterToInflux(counterData CounterData) error {
 	}
 	layoutFormat := "2006-01-02 15:04:05"
 	sendTime, _ := time.Parse(layoutFormat, counterData.Time)
+	utilities.Info.Println(sendTime.Format("2006-01-02 15:04:05"))
 
 	pt, err := client.NewPoint("counter_data", tags, map[string]interface{}{
 		"car_up":         counterData.CarUp,

@@ -6,12 +6,10 @@ import (
 	"JMVC-Middleware/controller"
 	utilities "JMVC-Middleware/utility"
 	"fmt"
-	"sync"
 	"time"
 
-	"github.com/NeowayLabs/wabbit"
-	"github.com/NeowayLabs/wabbit/amqp"
 	client "github.com/influxdata/influxdb1-client/v2"
+	"github.com/streadway/amqp"
 )
 
 func main() {
@@ -22,19 +20,19 @@ func main() {
 		}
 	}()
 
-	ch, err := RabbitInit()
+	// ch, err := RabbitInit()
 
-	//Retry the connection 6 times for every 10 seconds if the connection is error and always retrying if IS_PRODUCTION is true
-	for i := 1; (i <= 6 || config.IS_PRODUCTION) && err != nil; i++ {
-		time.Sleep(time.Second * 10)
-		ch, err = RabbitInit()
-	}
+	// //Retry the connection 6 times for every 10 seconds if the connection is error and always retrying if IS_PRODUCTION is true
+	// for i := 1; (i <= 6 || config.IS_PRODUCTION) && err != nil; i++ {
+	// 	time.Sleep(time.Second * 10)
+	// 	ch, err = RabbitInit()
+	// }
 
-	if err != nil {
-		utilities.Error.Fatal(err)
-	}
+	// if err != nil {
+	// 	utilities.Error.Fatal(err)
+	// }
 
-	defer ch.Close()
+	// defer ch.Close()
 
 	cInflux, err := InfluxInit()
 
@@ -48,25 +46,51 @@ func main() {
 		utilities.Error.Fatal(err.Error())
 	}
 
-	counterConsumer, err := connection.MakeConsumer(ch, config.RABBIT_QUEUE)
+	// counterConsumer, err := connection.MakeConsumer(ch, config.RABBIT_QUEUE)
 
+	// if err != nil {
+	// 	utilities.Error.Fatal(err)
+	// }
+	amqpServerURL := fmt.Sprintf("amqp://%s:%s@%s:%s/", config.RABBIT_USERNAME, config.RABBIT_PASSWORD, config.RABBIT_ADDRESS, config.RABBIT_PORT)
+	// Create a new RabbitMQ connection.
+	connectRabbitMQ, err := amqp.Dial(amqpServerURL)
 	if err != nil {
-		utilities.Error.Fatal(err)
+		utilities.Error.Println(err)
+	}
+	defer connectRabbitMQ.Close()
+
+	// Opening a channel to our RabbitMQ instance over
+	// the connection we have already established.
+	channelRabbitMQ, err := connectRabbitMQ.Channel()
+	if err != nil {
+		utilities.Error.Println(err)
+	}
+	defer channelRabbitMQ.Close()
+
+	// Subscribing to QueueService1 for getting messages.
+	messages, err := channelRabbitMQ.Consume(
+		config.RABBIT_QUEUE, // queue name
+		"",                  // consumer
+		true,                // auto-ack
+		false,               // exclusive
+		false,               // no local
+		false,               // no wait
+		nil,                 // arguments
+	)
+	if err != nil {
+		utilities.Error.Println(err)
 	}
 
-	var wg sync.WaitGroup
-
-	wg.Add(1)
+	forever := make(chan bool)
 
 	go func() {
-		defer wg.Done()
-		for msg := range counterConsumer {
+		for msg := range messages {
 			_ = controller.InsertCounterData(msg, cInflux)
 		}
 	}()
 
 	fmt.Println("Waiting Sensor Data...")
-	wg.Wait()
+	<-forever
 
 	utilities.Error.Fatalln("Unexpected Shutdown")
 }
@@ -98,18 +122,18 @@ func InfluxInit() (client.Client, error) {
 	return cInflux, nil
 }
 
-//Connect to RabbitMQ message broker
-func RabbitInit() (wabbit.Channel, error) {
-	//Set connection string that contains username, password, address, and port for connecting to rabbitMQ
-	conString := fmt.Sprintf("amqp://%s:%s@%s:%s/", config.RABBIT_USERNAME, config.RABBIT_PASSWORD, config.RABBIT_ADDRESS, config.RABBIT_PORT)
+// //Connect to RabbitMQ message broker
+// func RabbitInit() (wabbit.Channel, error) {
+// 	//Set connection string that contains username, password, address, and port for connecting to rabbitMQ
+// 	conString := fmt.Sprintf("amqp://%s:%s@%s:%s/", config.RABBIT_USERNAME, config.RABBIT_PASSWORD, config.RABBIT_ADDRESS, config.RABBIT_PORT)
 
-	conn, err := amqp.Dial(conString)
+// 	conn, err := amqp.Dial(conString)
 
-	var ch wabbit.Channel
+// 	var ch wabbit.Channel
 
-	if err == nil {
-		ch, err = conn.Channel()
-	}
+// 	if err == nil {
+// 		ch, err = conn.Channel()
+// 	}
 
-	return ch, err
-}
+// 	return ch, err
+// }

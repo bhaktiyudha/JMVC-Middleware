@@ -7,8 +7,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/NeowayLabs/wabbit"
 	client "github.com/influxdata/influxdb1-client/v2"
+	"github.com/streadway/amqp"
 	"gopkg.in/go-playground/validator.v9"
 )
 
@@ -34,10 +34,10 @@ type CounterData struct {
 }
 
 //Function that will process sensor data before insert it to InfluxDB
-func InsertCounterData(msg wabbit.Delivery, cInflux client.Client) error {
+func InsertCounterData(msg amqp.Delivery, cInflux client.Client) error {
 	jsonData := CounterData{}
 	//Convert data body to a struct
-	err := json.Unmarshal(msg.Body(), &jsonData)
+	err := json.Unmarshal(msg.Body, &jsonData)
 	if err != nil {
 		msg.Ack(false)
 		utilities.Error.Printf("Error parsing data : %s \n", err)
