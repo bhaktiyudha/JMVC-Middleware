@@ -6,7 +6,24 @@ import (
 )
 
 var (
-	IS_PRODUCTION bool = false
+	IS_PRODUCTION         bool    = false
+	JUMLAH_LAJUR          float64 = 3
+	KAPASITAS_DASAR       float64 = 2300
+	KAPASITAS_DASAR_MENIT float64 = 2300 / 60
+	LEBAR_LAJUR           float64 = 3600
+	FCW                   float64 = 1.012
+	FCSP                  float64 = 1.000
+	KAPASITAS_JALAN       float64 = JUMLAH_LAJUR * KAPASITAS_DASAR * FCW * FCSP
+	KAPASITAS_JALAN_MENIT float64 = JUMLAH_LAJUR * KAPASITAS_DASAR_MENIT * FCW * FCSP
+	EMV_GOL_1             float64 = 1
+	EMV_GOL_SMALL_BUS             = 1.3
+	EMV_GOL_BIG_BUS               = 1.5
+	EMV_GOL_2                     = 1.3
+	EMV_GOL_345           float64 = 2
+	BEBAN_RUAS_HARI       float64 = 51439
+	PHF                   float64 = 0.06
+	BEBAN_RUAS_JAM                = BEBAN_RUAS_HARI * PHF
+	BEBAN_RUAS_MENIT              = BEBAN_RUAS_JAM / 60
 )
 
 //Change default config data if it's environment variable exist and not empty

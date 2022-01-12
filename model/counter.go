@@ -15,7 +15,7 @@ type CounterData struct {
 	ID          string  `json:"id"`
 	Time        string  `json:"time"`
 	CarUp       int     `json:"car_up"`
-	BusSUp      int     `json:"bus(s)_up`
+	BusSUp      int     `json:"bus(s)_up"`
 	BusLUp      int     `json:"bus(l)_up"`
 	TruckSUp    int     `json:"truck(s)_up"`
 	TruckMUp    int     `json:"truck(m)_up"`
@@ -57,6 +57,7 @@ func (cm CounterModel) InsertCounterToInflux(counterData CounterData) error {
 	}
 	layoutFormat := "2006-01-02 15:04:05"
 	sendTime, _ := time.Parse(layoutFormat, counterData.Time)
+	vcratio_up, vcratio_down := countVCRatio(counterData)
 
 	pt, err := client.NewPoint("counter_data", tags, map[string]interface{}{
 		"car_up":         counterData.CarUp,
@@ -67,6 +68,7 @@ func (cm CounterModel) InsertCounterToInflux(counterData CounterData) error {
 		"truck(l)_up":    counterData.TruckLUp,
 		"truck(xl)_up":   counterData.TruckXLUp,
 		"speed_up":       counterData.SpeedUp,
+		"vcratio_up":     vcratio_up,
 		"car_down":       counterData.CarDown,
 		"bus(s)_down":    counterData.BusSDown,
 		"bus(l)_down":    counterData.BusLDown,
@@ -75,6 +77,7 @@ func (cm CounterModel) InsertCounterToInflux(counterData CounterData) error {
 		"truck(l)_down":  counterData.TruckLDown,
 		"truck(xl)_down": counterData.TruckXLDown,
 		"speed_down":     counterData.SpeedDown,
+		"vcratio_down":   vcratio_down,
 	}, sendTime)
 
 	if err != nil {
