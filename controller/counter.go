@@ -16,7 +16,7 @@ type CounterData struct {
 	ID          string  `json:"id"`
 	Time        string  `json:"time"`
 	CarUp       int     `json:"car_up"`
-	BusSUp      int     `json:"bus(s)_up`
+	BusSUp      int     `json:"bus(s)_up"`
 	BusLUp      int     `json:"bus(l)_up"`
 	TruckSUp    int     `json:"truck(s)_up"`
 	TruckMUp    int     `json:"truck(m)_up"`
@@ -59,7 +59,7 @@ func InsertCounterData(msg amqp.Delivery, cInflux client.Client) error {
 			err := cm.InsertCounterToInflux(model.CounterData(jsonData))
 
 			if err != nil {
-				utilities.Error.Printf("Error inserting data : %s", jsonData.ID, err)
+				utilities.Error.Printf("Error inserting data %v: %s", jsonData.ID, err)
 				return err
 			}
 		}
